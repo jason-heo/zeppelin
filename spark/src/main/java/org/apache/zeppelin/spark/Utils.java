@@ -17,11 +17,19 @@
 
 package org.apache.zeppelin.spark;
 
+import org.apache.zeppelin.interpreter.InterpreterContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Utility and helper functions for the Spark Interpreter
@@ -103,5 +111,37 @@ class Utils {
     } catch (ClassNotFoundException e) {
       return false;
     }
+  }
+
+  static void write_history(String file_path, InterpreterContext context, String cmd)
+  {
+    try {
+      String user = context.getAuthenticationInfo().getUser();
+
+      FileWriter wf = new FileWriter(file_path, true);
+
+      wf.write("=======================\n");
+      wf.write("----- Info ----\n");
+      wf.write("DateTime: " + get_local_time() + "\n");
+      wf.write("User: " + user + "\n");
+      wf.write("NoteId: " + context.getNoteId() + "\n");
+      wf.write("ParagraphId: " + context.getParagraphId() + "\n");
+
+      wf.write("----- Command ----\n");
+      wf.write(cmd + "\n");
+
+      wf.close();
+    }
+    catch (java.io.IOException e) {
+      logger.error("Can't open history '" + file_path + "'");
+    }
+  }
+
+  static String get_local_time()
+  {
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    df.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+
+    return df.format(new Date());
   }
 }

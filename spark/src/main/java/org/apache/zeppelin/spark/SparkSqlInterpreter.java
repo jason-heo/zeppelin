@@ -17,6 +17,7 @@
 
 package org.apache.zeppelin.spark;
 
+import java.io.FileWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class SparkSqlInterpreter extends Interpreter {
   Logger logger = LoggerFactory.getLogger(SparkSqlInterpreter.class);
   AtomicInteger num = new AtomicInteger(0);
+  final String history_file_path = "/tmp/zeppelin-sparksql.history";
 
   private String getJobGroup(InterpreterContext context){
     return "zeppelin-" + context.getParagraphId();
@@ -88,6 +90,7 @@ public class SparkSqlInterpreter extends Interpreter {
 
   @Override
   public InterpreterResult interpret(String st, InterpreterContext context) {
+    logger.info("jsheo interpret() called");
     SQLContext sqlc = null;
     SparkInterpreter sparkInterpreter = getSparkInterpreter();
 
@@ -106,12 +109,16 @@ public class SparkSqlInterpreter extends Interpreter {
 
     sc.setJobGroup(getJobGroup(context), "Zeppelin", false);
     Object rdd = null;
+
+    Utils.write_history(this.history_file_path, context, st);
+
     try {
       // method signature of sqlc.sql() is changed
       // from  def sql(sqlText: String): SchemaRDD (1.2 and prior)
       // to    def sql(sqlText: String): DataFrame (1.3 and later).
       // Therefore need to use reflection to keep binary compatibility for all spark versions.
       Method sqlMethod = sqlc.getClass().getMethod("sql", String.class);
+
       rdd = sqlMethod.invoke(sqlc, st);
     } catch (InvocationTargetException ite) {
       if (Boolean.parseBoolean(getProperty("zeppelin.spark.sql.stacktrace"))) {

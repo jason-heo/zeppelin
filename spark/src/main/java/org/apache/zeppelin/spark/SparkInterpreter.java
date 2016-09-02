@@ -87,6 +87,7 @@ import scala.tools.nsc.settings.MutableSettings.PathSetting;
  *
  */
 public class SparkInterpreter extends Interpreter {
+  final String history_file_path = "/tmp/zeppelin-spark.history";
   public static Logger logger = LoggerFactory.getLogger(SparkInterpreter.class);
 
   private ZeppelinContext z;
@@ -1088,8 +1089,11 @@ public class SparkInterpreter extends Interpreter {
       }
 
       scala.tools.nsc.interpreter.Results.Result res = null;
+
+      String spark_cmd = incomplete + s;
+      Utils.write_history(this.history_file_path, context, spark_cmd);
       try {
-        res = interpret(incomplete + s);
+        res = interpret(spark_cmd);
       } catch (Exception e) {
         sc.clearJobGroup();
         out.setInterpreterOutput(null);
