@@ -90,7 +90,6 @@ public class SparkSqlInterpreter extends Interpreter {
 
   @Override
   public InterpreterResult interpret(String st, InterpreterContext context) {
-    logger.info("jsheo interpret() called");
     SQLContext sqlc = null;
     SparkInterpreter sparkInterpreter = getSparkInterpreter();
 
